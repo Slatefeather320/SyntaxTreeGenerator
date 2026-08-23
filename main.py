@@ -67,9 +67,9 @@ class Tree:
             self.label = text_buffer + "|"
 
         if not self.text_highlighted:
-            text_surface = font.render(self.label, True, (0,0,0))
+            text_surface = ui.font.render(self.label, True, (0,0,0))
         else:
-            text_surface = font.render(self.label, True, (0,0,255))
+            text_surface = ui.font.render(self.label, True, (0,0,255))
         text_rect = text_surface.get_rect()
         text_rect.centerx = self.pos[0]
         text_rect.y = self.pos[1] + self.text_offset
@@ -149,14 +149,29 @@ class Tree:
             for child in self.children:
                 child.grab()
 
+class UI:
+    def __init__(self):
+        self.fontsize = 20
+        self.font = pygame.font.SysFont("Arial", self.fontsize) 
+
+    def render(self):    
+        num_child_counter_text_surface = self.font.render(("Children Per Click: " + str(num_new_children)), True, (0,0,0))
+        num_child_counter_text_rect =  num_child_counter_text_surface.get_rect() 
+        num_child_counter_text_rect.bottomright = (WINDOW_WIDTH - self.fontsize/2, WINDOW_HEIGHT - self.fontsize/2)
+        screen.blit(num_child_counter_text_surface, num_child_counter_text_rect)        
+
+
 #Creating Initial Tree
 root = Tree()
 root.pos = (WINDOW_WIDTH//2, 50)
+ui = UI()
 
 def render():
     screen.fill((255,255,255))
     root.render()
+    ui.render()
     pygame.display.flip()
+   
 
 #############################################
 #Event Loop
