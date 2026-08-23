@@ -213,7 +213,10 @@ class Tree:
         self.children.clear()
 
     def export(self):
-        pass
+        text = self.makeText()
+        output_el = js.document.getElementById("Output")
+        if output_el:
+            output_el.innerText = text
         
 
 class UI:
