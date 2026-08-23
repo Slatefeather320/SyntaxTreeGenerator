@@ -1,4 +1,4 @@
-import pygame
+import pygame, math
 
 ############################################
 #Pygame Boilerplate Stuf
@@ -16,9 +16,12 @@ screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Syntax Tree Generator")
 font = pygame.font.SysFont("Arial", 20)
 
-text_being_edited = False #global bool
-text_buffer = ""
+#############################################
 
+#Globals
+text_being_edited = False 
+text_buffer = ""
+num_new_children = 3
 #############################################
 
 class Tree:
@@ -31,7 +34,7 @@ class Tree:
 
     def __init__(self):
         self.pos = (0,0)
-        self.label = "Not Set"
+        self.label = "Add Text"
         self.children = []
         self.shown = False
         self.grabbed = False
@@ -39,6 +42,12 @@ class Tree:
         self.index_from_parent = 0
         self.text_highlighted = False
         self.text_edit_mode = False
+        self.relation_to_moving_parent = (0,0)
+
+    def moveChildRec(self):
+        self.pos = (mouse_x + self.relation_to_moving_parent[0], mouse_y + self.relation_to_moving_parent[1])
+        for child in self.children:
+            child.moveChildRec()
 
     def render(self):
         global text_buffer
@@ -46,6 +55,8 @@ class Tree:
         self.shown = (mouse_x - self.pos[0])**2 + (mouse_y - self.pos[1])**2 <= self.interact_zone
         if self.grabbed:
                     self.pos = (mouse_x, mouse_y)
+                    for child in self.children:
+                        child.moveChildRec()
                     if not left_click_down:
                         self.grabbed = False
         elif self.shown:
@@ -72,12 +83,21 @@ class Tree:
             child.render()
 
     def addChild(self):
+        global num_new_children
         if self.shown:
-            child = Tree()
-            child.pos = (self.pos[0], self.pos[1] + self.child_spawn_dist)
-            self.children.append(child)
-            child.parent = self
-            child.index_from_parent = len(self.children) - 1
+            if num_new_children > 1:
+                angle_increment = (math.pi/2)/(num_new_children - 1)
+            else:
+                angle_increment = math.pi/4
+            for i in range(0,num_new_children):
+                angle = math.pi/4 + i*angle_increment
+                child = Tree()
+                child_x = self.pos[0] + self.child_spawn_dist * math.cos(angle)
+                child_y = self.pos[1] + self.child_spawn_dist * math.sin(angle)
+                child.pos = (child_x, child_y)
+                self.children.append(child)
+                child.parent = self
+                child.index_from_parent = len(self.children) - 1
         else:
             for child in self.children:
                 child.addChild()
@@ -85,9 +105,14 @@ class Tree:
     def removeSelf(self):
         if self.shown and self != root:
             self.parent.children.pop(self.index_from_parent)
+            self.parent.decrementSiblingIndecies()
         else:
             for child in self.children:
                 child.removeSelf()
+
+    def decrementSiblingIndecies(self):
+        for child in self.children:
+            child.index_from_parent -= 1
 
     def editText(self):
         global text_being_edited, text_buffer
@@ -97,7 +122,7 @@ class Tree:
             text_being_edited = False
             self.label = text_buffer
             if text_buffer == "":
-                self.label = "-"
+                self.label = "---"
             text_buffer = ""
         else:
             if self.text_highlighted:
@@ -107,9 +132,19 @@ class Tree:
                 for child in self.children:
                     child.editText()
 
+    def setChildOffsetsRec(self, moving_parent):
+        self.relation_to_moving_parent = (self.pos[0] - moving_parent.pos[0], self.pos[1] - moving_parent.pos[1])
+        for child in self.children:
+            child.setChildOffsetsRec(moving_parent)
+
+    def setChildOffsets(self):
+        for child in self.children:
+            child.setChildOffsetsRec(self)
+
     def grab(self):
         if self.shown:
             self.grabbed = True
+            self.setChildOffsets()
         else:
             for child in self.children:
                 child.grab()
