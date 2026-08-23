@@ -26,7 +26,7 @@ num_new_children = 3
 
 class Tree:
     handle_radius = 10
-    child_line_offset = 35
+    child_line_offset = 40
     line_width = 2
     text_offset = 10
     interact_zone = 12**2 #needs to be squared to make distance calc easier 
@@ -34,7 +34,7 @@ class Tree:
 
     def __init__(self):
         self.pos = (0,0)
-        self.label = "Edit Text"
+        self.label = "Text"
         self.children = []
         self.shown = False
         self.grabbed = False
@@ -111,12 +111,15 @@ class Tree:
 
     def addChild(self):
         global num_new_children
+        spread_angle = math.pi / 2
         if num_new_children > 1:
-            angle_increment = (math.pi/2)/(num_new_children - 1)
+            angle_increment = spread_angle / (num_new_children - 1)
+            start_angle = math.pi/2 - (spread_angle / 2) 
         else:
-            angle_increment = math.pi/4
+            angle_increment = 0
+            start_angle = math.pi/2
         for i in range(0,num_new_children):
-            angle = math.pi/4 + i*angle_increment
+            angle = start_angle + (i * angle_increment)
             child = Tree()
             child_x = self.pos[0] + self.child_spawn_dist * math.cos(angle)
             child_y = self.pos[1] + self.child_spawn_dist * math.sin(angle)
@@ -234,6 +237,26 @@ root = Tree()
 root.pos = (WINDOW_WIDTH//2, 50)
 root.isRoot = True
 ui = UI()
+
+##making the wug sentence :)
+root.label = "S"
+num_new_children = 2
+root.addChild()
+vp, np = root.children[0], root.children[1]
+np.label = "NP"
+vp.label = "VP"
+vp.addChild()
+np2, v = vp.children[0], vp.children[1]
+v.label = "V"
+np2.label = "NP"
+num_new_children = 1
+np.addChild()
+np.children[0].label = "This"
+v.addChild()
+v.children[0].label = "is"
+np2.addChild()
+np2.children[0].label = "a wug"
+num_new_children = 2
 
 def render():
     screen.fill((255,255,255))
