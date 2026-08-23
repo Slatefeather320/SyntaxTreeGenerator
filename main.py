@@ -187,7 +187,6 @@ class Tree:
                 child.grab()
 
     def buttonInteract(self):
-        print("Test")
         if self.buttons_shown:
             if self.add_button.checkClick():
                 self.addChild()
@@ -202,11 +201,31 @@ class UI:
         self.fontsize = 25
         self.font = pygame.font.SysFont("Arial", self.fontsize) 
 
+        self.add_button = Button()
+        self.add_button.color = (0,255,0)
+        self.add_button.label = "+"
+        self.add_button.pos = (WINDOW_WIDTH - self.add_button.sidelength, WINDOW_HEIGHT - 2*self.add_button.sidelength )
+        
+        self.del_button = Button()
+        self.del_button.color = (255,0,0)
+        self.del_button.label = "-"
+        self.del_button.pos = (WINDOW_WIDTH - self.add_button.sidelength, WINDOW_HEIGHT - self.add_button.sidelength )
+
     def render(self):    
         num_child_counter_text_surface = self.font.render(("Children Per Click: " + str(num_new_children)), True, (0,0,0))
         num_child_counter_text_rect =  num_child_counter_text_surface.get_rect() 
-        num_child_counter_text_rect.bottomright = (WINDOW_WIDTH - self.fontsize/2, WINDOW_HEIGHT - self.fontsize/2)
-        screen.blit(num_child_counter_text_surface, num_child_counter_text_rect)   
+        num_child_counter_text_rect.bottomright = (WINDOW_WIDTH - self.fontsize/2 - 30, WINDOW_HEIGHT - self.fontsize/2)
+        screen.blit(num_child_counter_text_surface, num_child_counter_text_rect) 
+
+        self.add_button.render()
+        self.del_button.render()  
+
+    def buttonInteract(self):
+            global num_new_children
+            if self.add_button.checkClick():
+                num_new_children += 1
+            elif self.del_button.checkClick() and num_new_children >= 1:
+                num_new_children -= 1
 
 class Button:
     font = pygame.font.SysFont("Arial", 20) 
@@ -285,6 +304,7 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 root.buttonInteract()
+                ui.buttonInteract()
                 root.grab()
                 root.editText()
         if event.type == pygame.QUIT:
