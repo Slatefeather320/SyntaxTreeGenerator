@@ -14,14 +14,18 @@ left_click_down = False
 
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Syntax Tree Generator")
-font = pygame.font.SysFont("Arial", 12)
+font = pygame.font.SysFont("Arial", 20)
+
+text_being_edited = False #global bool
+text_buffer = ""
+
 #############################################
 
 class Tree:
     handle_radius = 10
-    child_line_offset = 25
+    child_line_offset = 35
     line_width = 2
-    text_offset = 10
+    text_offset = 15
     interact_zone = 12**2 #needs to be squared to make distance calc easier 
     child_spawn_dist = 70
 
@@ -33,8 +37,11 @@ class Tree:
         self.grabbed = False
         self.parent = None
         self.index_from_parent = 0
+        self.text_highlighted = False
+        self.text_edit_mode = False
 
     def render(self):
+        global text_buffer
         #render and move using handle 
         self.shown = (mouse_x - self.pos[0])**2 + (mouse_y - self.pos[1])**2 <= self.interact_zone
         if self.grabbed:
@@ -47,11 +54,19 @@ class Tree:
                 self.grabbed = True
 
         #render label text
-        text_surface = font.render(self.label, True, (0,0,0))
+        if self.text_edit_mode:
+            self.label = text_buffer + "|"
+
+        if not self.text_highlighted:
+            text_surface = font.render(self.label, True, (0,0,0))
+        else:
+            text_surface = font.render(self.label, True, (0,0,255))
         text_rect = text_surface.get_rect()
         text_rect.centerx = self.pos[0]
         text_rect.y = self.pos[1] + self.text_offset
         screen.blit(text_surface, text_rect)
+
+        self.text_highlighted = mouse_x >= text_rect.topleft[0] and mouse_x <= text_rect.topright[0] and mouse_y >= text_rect.topleft[1] and mouse_y <= text_rect.bottomleft[1]
 
         #render lines to child and child 
         for child in self.children:
@@ -76,6 +91,24 @@ class Tree:
             for child in self.children:
                 child.removeSelf()
 
+    def editText(self):
+        global text_being_edited, text_buffer
+
+        if self.text_edit_mode:
+            self.text_edit_mode = False
+            text_being_edited = False
+            self.label = text_buffer
+            if text_buffer == "":
+                self.label = "-"
+            text_buffer = ""
+        else:
+            if self.text_highlighted:
+                self.text_edit_mode = True
+                text_being_edited = True
+            else:
+                for child in self.children:
+                    child.editText()
+
 #Creating Initial Tree
 root = Tree()
 root.pos = (WINDOW_WIDTH//2, 50)
@@ -91,10 +124,20 @@ running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
+            if text_being_edited:
+                if event.key == pygame.K_BACKSPACE:
+                    text_buffer = text_buffer[:-1]
+                elif event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER or event.key == pygame.K_ESCAPE:
+                    root.editText()
+                else:
+                    text_buffer += event.unicode 
             if event.key == pygame.K_q:
                 root.addChild()
             if event.key == pygame.K_w:
                 root.removeSelf()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                root.editText()
         if event.type == pygame.QUIT:
             running = False
 
@@ -104,7 +147,6 @@ while running:
     mouse_x, mouse_y = pygame.mouse.get_pos()
     mouse_buttons = pygame.mouse.get_pressed()
     left_click_down = mouse_buttons[0]
-
     render()
 #############################################
 
