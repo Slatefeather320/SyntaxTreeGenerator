@@ -1,0 +1,482 @@
+<html lang="en-us"><script src="https://pygame-web.github.io/cdn/0.9.3/pythons.js" type=module id="site" data-python="python3.12" data-LINES=42 data-COLUMNS=132 data-os="vtx,snd,gui" async defer>#<!--
+
+print("""
+Loading syntaxtree from syntaxtree.apk
+    Pygbag Version : 0.9.3
+    Template Version : 0.9.3
+    Python  : 3.12
+    CDN URL : https://pygame-web.github.io/cdn/0.9.3/
+    Screen  : 1280x720
+    Title   : syntaxtree
+    Folder  : syntaxtree
+    Authors : pgw
+    SPDX-License-Identifier: cookiecutter.spdx
+
+""")
+
+import sys
+import asyncio
+import platform
+import json
+from pathlib import Path
+
+# do not rename
+async def custom_site():
+    import embed
+    
+    platform.document.body.style.background = "#f0ede6"
+
+    platform.window.transfer.hidden = true
+    platform.window.canvas.style.visibility = "visible"
+
+    bundle = "syntaxtree"
+
+    # the C or js loader could do that but be explicit.
+    appdir = Path(f"/data/data/{bundle}") # /data/data/pixelgame
+    appdir.mkdir()
+
+    # unpack filesystem from compressed archive into work dir
+    if platform.window.location.host.find('.itch.zone')>0:
+        import zipfile
+        async with platform.fopen("syntaxtree.apk", "rb") as archive:
+            with zipfile.ZipFile(archive) as zip_ref:
+                zip_ref.extractall(appdir.as_posix())
+    else:
+        import tarfile
+        async with platform.fopen("syntaxtree.tar.gz", "rb") as archive:
+            tar = tarfile.open(fileobj=archive, mode="r:gz")
+            tar.extractall(path=appdir.as_posix(), filter='tar')
+            tar.close()
+
+    # preloader will change to work dir and prepend it to sys.path
+    platform.run_main(PyConfig, loaderhome= appdir / "assets", loadermain=None)
+
+    # wait preloading complete : that includes images and wasm compilation of bundled modules
+    while embed.counter()<0:
+        await asyncio.sleep(.1)
+
+    main = appdir / "assets" / "main.py"
+
+    # REMOVED the "Wait for user media interaction" block here so it auto-starts
+
+    # start async top level machinery if not started and add a console in any case if requested.
+    await TopLevel_async_handler.start_toplevel(platform.shell, console=window.python.config.debug)
+
+    # now that apk is mounted we have access to font cache
+    # but we need to fill __file__/__name__ that are not yet set
+    __import__(__name__).__file__ = main
+
+    def ui_callback(pkg):
+        platform.window.infobox.innerText = f"installing {pkg}"
+
+    await shell.source(main, callback=ui_callback)
+
+    platform.window.infobox.style.display = "none"
+    platform.window.config.gui_divider = 1
+    platform.window.window_resize()
+    print("default.tmpl: done")
+
+    shell.interactive()
+
+asyncio.run( custom_site() )
+
+
+
+
+
+
+
+
+
+
+
+
+# BEGIN BLOCK
+#
+# now this is the html part you can (and should) customize
+# It is not mandatory : pygame-script when it reads the first line (also called
+# shebang ) of above code create absolute minimal widget set
+# required for running with default rules
+#
+# do not alter that comment block it is separating python code from html code
+# =============================================================================
+# --></script><head><!--
+//=============================================================================
+//
+//
+//
+//
+//
+//
+//
+
+    {%- if cookiecutter.comment != "" -%}
+{{cookiecutter.comment}}
+    {% endif %}
+
+--><script type="application/javascript">
+// END BLOCK
+
+
+
+// this dict is available under PyConfig.config from __main__
+
+config = {
+    xtermjs : "1" ,
+    _sdl2 : "canvas",
+    user_canvas : 0,
+    user_canvas_managed : 0,
+    gui_divider : 2,
+    ume_block : 0, // CHANGED TO 0 TO PREVENT AUDIO BLOCKING
+    can_close : 0,
+    archive : "syntaxtree",
+    gui_debug : 2,
+    cdn : "https://pygame-web.github.io/cdn/0.9.3/",
+    autorun : 1, // CHANGED TO 1 TO ENCOURAGE AUTO-START
+    PYBUILD : "3.12",
+    fb_ar   :  1.333,
+    fb_width : "800",
+    fb_height : "600"
+}
+
+function show_infobox() {
+    infobox.style.display = "block";
+
+    // Measure box
+    const w = infobox.offsetWidth;
+    const h = infobox.offsetHeight;
+
+    // Center in viewport
+    const left = (window.innerWidth - w) / 2;
+    const top = (window.innerHeight - h) / 2;
+
+    infobox.style.left = left + "px";
+    infobox.style.top = top + "px";
+}
+
+</script>
+
+    <title>Syntax Tree Genertor</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="height=device-height, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+
+
+    <link rel="icon" type="image/x-icon" href="../icon.ico">
+
+    <style>
+        :root {
+            --gold: #C8A42A;
+            --cream: #f0ede6;
+            --dark: #1a1a1a;
+            --mono: 'Courier New', Courier, monospace;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .app-btn {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--dark);
+            background-color: var(--cream);
+            
+            border: 1.5px solid var(--gold);
+            border-radius: 16px;
+            padding: 6px 14px;
+            
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+
+        .app-btn:hover {
+            background-color: var(--gold);
+            color: var(--cream);
+        }
+
+        body {
+            font-family: var(--mono);
+            margin: 0;
+            padding: 40px 20px;
+            background-color: var(--cream);
+            color: var(--dark);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .layout-container {
+            display: flex;
+            flex-direction: row;
+            gap: 40px;
+            max-width: 1200px;
+            width: 100%;
+            align-items: flex-start;
+            flex-wrap: wrap; 
+        }
+
+        /* UPDATED: Allows the section to shrink/grow fluidly up to 800px */
+        .game-section {
+            flex: 1 1 500px;
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+            background-color: var(--dark);
+            border: 4px solid var(--gold);
+            box-sizing: border-box;
+        }
+
+        .text-section {
+            flex: 1 1 300px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        #status {
+            display: inline-block;
+            vertical-align: top;
+            margin-top: 20px;
+            font-weight: bold;
+            color: var(--cream);
+        }
+
+        #progress {
+            height: 20px;
+            width: 300px;
+            accent-color: var(--gold);
+        }
+
+        #infobox {
+            position: fixed; 
+            background: var(--gold);
+            color: var(--dark);
+            font-weight: bold;
+            padding: 12px 24px;
+            z-index: 999999;
+            border: 2px solid var(--dark);
+        }
+        
+        div.emscripten { text-align: center; }
+        div.emscripten_border { border: 1px solid black; }
+        div.thick_border { border: 4px solid black; }
+
+        /* UPDATED: Forces fluid width while maintaining exact 4:3 aspect ratio */
+        canvas.emscripten {
+            border: 0px none;
+            background-color: transparent;
+            z-index: 5;
+            padding: 0;
+            margin: 0 auto;
+            
+            position: static !important;
+            width: 100% !important;
+            height: auto !important;
+            aspect-ratio: 4 / 3 !important;
+            display: block;
+        }
+
+        canvas[hidden] {
+            display: none !important;
+        }
+
+        .topright{ position:absolute; top:0px; right:0px; }
+        .bottomright { position:absolute; top: 40%; right: 0px; }
+        .center { display: flex; align-items: center; justify-content: center; }
+        .trinfo{ position: relative; right: 0px; border: 1px solid black; }
+        
+        .framed{
+        position: relative;
+        top: 150px;
+        right: 10px;
+        border: 1px solid black;
+        }
+    </style>
+
+    <script>
+/*
+        if (navigator.serviceWorker)
+            navigator.serviceWorker.register("https://pygame-web.github.io/cdn/0.9.3/pygbag0.9.3.js")
+        else
+            console.warn("Service workers not supported")
+*/
+    </script>
+
+    <script src="https://pygame-web.github.io/cdn/0.9.3//browserfs.min.js"></script>
+
+</head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7K9K4TNNYE"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-7K9K4TNNYE');
+</script>
+
+<body>
+
+    <div class="layout-container">
+        <!-- GAME SECTION -->
+        <div class="game-section">
+            <div id="transfer" align=center>
+                <div class="emscripten" id="status">Loading project...</div>
+                <div class="emscripten">
+                    <progress value="0" max="100" id="progress"></progress>
+                </div>
+            </div>
+
+            <canvas class="emscripten" id="canvas" width="800px" height="600px" oncontextmenu="event.preventDefault()" tabindex=1></canvas>
+            <canvas class="emscripten" id="canvas3d" width="800px" height="600px" oncontextmenu="event.preventDefault()" tabindex=1 hidden></canvas>
+        </div>
+
+        <!-- TEXT SECTION SIDE-BY-SIDE -->
+        <div class="text-section">
+            <h2>UI based Syntax Tree Generator</h2>
+            <div class="btn-group">
+                <button class="app-btn" onclick="window.increaseChildPerClick()">
+                    + Increase Children per Click
+                </button>
+                <button class="app-btn" onclick="window.decreaseChildPerClick()">
+                    - Decrease Children per Click
+                </button>
+            </div>
+            <div class="btn-group">
+                <button class="app-btn" onclick="window.reset()">
+                    Reset Tree
+                </button>
+                <button class="app-btn" onclick="window.export()">
+                    Export Tree
+                </button>
+            </div>
+
+            <p>Currently being user tested. Hover over nodes to interact.</p>
+            <p>Mobile usibility may be suboptimal.</p>
+            <p><a href="https://sanilarora.com">Back to Home</a></p>
+        </div>
+    </div>
+
+
+    <div id="infobox">Loading</div>
+
+    <div id=html></div>
+
+    <div id=crt  class=bottomright >
+
+        <div id="system" hidden>
+            <div class="button-container">
+                <button id="aiostop" disabled>AIO ⏏︎</button>
+                <button id="aiopaused_true" disabled>AIO ■</button>
+                <button id="aiopaused_false" disabled>AIO ▶</button>
+                <button id="pygame_mixer_music_pause" disabled>Music ■</button>
+            </div>
+
+            <div class="button-container">
+                <div id=load_min>min</div>
+                <div id=load_avg>avg</div>
+                <div id=load_max>max</div>
+              <button id="load_rst" disabled>RESET</button>
+            </div>
+
+            <div id="level">(battery level unknown)</div>
+            <div id="stateBattery">(charging state unknown)</div>
+
+        </div>
+
+        <div id=box class="emscripten_border" hidden=true>
+
+            <div id="info" class="trinfo"></div>
+
+            <iframe id="iframe" class="framed" name="iframe"
+width="470px" height="90%"
+allowtransparency="true"
+style="z-index: 10;"
+style="background: #FFFFFF;"
+frameborder="1"
+                allowfullscreen="true"
+                webkitallowfullscreen="true"
+                msallowfullscreen="true"
+                mozallowfullscreen="true"
+                sandbox="allow-same-origin allow-top-navigation allow-scripts allow-pointer-lock"
+                allow="autoplay; fullscreen *; geolocation; microphone; camera; midi; monetization; xr-spatial-tracking; gamepad; gyroscope; accelerometer; xr; cross-origin-isolated"
+                src="https://pygame-web.github.io/cdn/0.9.3/empty.html"
+                scrolling="yes">
+            </iframe>
+        </div>
+
+    </div>
+
+
+    <div id="dlg" hidden>
+        <input type="file" id="dlg_multifile" multiple accept="image/*">
+        <label for="dlg_multifile">Select files</label>
+    </div>
+
+    <div id="pyconsole">
+        <div id="terminal" tabIndex=1 align="left"></div>
+    </div>
+
+    <script type="application/javascript">
+
+    globalThis.__canvas_resized = (self, ecw, ech) => {
+        console.warn("TODO: panda3d canvas monitor", self, ecw, ech)
+    }
+
+    async function custom_onload(debug_hidden) {
+        console.log(__FILE__, "custom_onload")
+
+        pyconsole.hidden = debug_hidden
+        system.hidden = debug_hidden
+        transfer.hidden = debug_hidden
+        info.hidden = debug_hidden
+        box.hidden =  debug_hidden
+
+        show_infobox()
+    }
+
+    function custom_prerun(){
+        console.log(__FILE__, "custom_prerun")
+    }
+
+    function custom_postrun(){
+        console.log(__FILE__, "custom_postrun")
+    }
+
+    function debug() {
+        python.config.debug = true
+        custom_onload(false)
+        Module.PyRun_SimpleString("shell.uptime()")
+        window_resize()
+    }
+
+    function info_inline(data){
+        document.getElementById("info").innerHTML = data
+    }
+
+    function info_online(url) {
+        fetch( url )
+            .then((response) => response.text())
+            .then((html) => {
+                info_inline(html);
+        })
+        .catch((error) => {
+            console.warn(error);
+        });
+    }
+
+    function frame_online(url) {
+        window.frames["iframe"].location = url;
+    }
+
+    </script>
+
+</body>
+</html>

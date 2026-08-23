@@ -1,5 +1,4 @@
-import pygame, math
-
+import pygame, math, asyncio, js
 ############################################
 #Pygame Boilerplate Stuf
 pygame.init()
@@ -197,35 +196,44 @@ class Tree:
             for child in self.children:
                 child.buttonInteract()
 
+    def makeText(self):
+        out =  self.label 
+        if self.children != []:
+            out += " "
+            self.children.reverse()
+            for child in self.children:
+                out += child.makeText()
+            self.children.reverse()
+            return "[" + out + "]"
+        else:
+            return out
+
+    def reset(self):
+        self.label = "Text"
+        self.children.clear()
+
+    def export(self):
+        pass
+        
+
 class UI:
     def __init__(self):
         self.fontsize = 25
         self.font = pygame.font.SysFont("Arial", self.fontsize) 
 
-        self.add_button = Button()
-        self.add_button.color = (0,255,0)
-        self.add_button.label = "+"
-        self.add_button.pos = (WINDOW_WIDTH - self.add_button.sidelength, WINDOW_HEIGHT - 2*self.add_button.sidelength )
-        
-        self.del_button = Button()
-        self.del_button.color = (255,0,0)
-        self.del_button.label = "-"
-        self.del_button.pos = (WINDOW_WIDTH - self.add_button.sidelength, WINDOW_HEIGHT - self.add_button.sidelength )
-
     def render(self):    
         num_child_counter_text_surface = self.font.render(("Children Per Click: " + str(num_new_children)), True, (0,0,0))
         num_child_counter_text_rect =  num_child_counter_text_surface.get_rect() 
-        num_child_counter_text_rect.bottomright = (WINDOW_WIDTH - self.fontsize/2 - 30, WINDOW_HEIGHT - self.fontsize/2)
+        num_child_counter_text_rect.bottomright = (WINDOW_WIDTH - self.fontsize/2, WINDOW_HEIGHT - self.fontsize/2)
         screen.blit(num_child_counter_text_surface, num_child_counter_text_rect) 
 
-        self.add_button.render()
-        self.del_button.render()  
+    def increaseChildPerClick(self, *args):
+        global num_new_children
+        num_new_children += 1
 
-    def buttonInteract(self):
-            global num_new_children
-            if self.add_button.checkClick():
-                num_new_children += 1
-            elif self.del_button.checkClick() and num_new_children >= 1:
+    def decreaseChildPerClick(self, *args):
+            global num_new_children 
+            if num_new_children > 1:
                 num_new_children -= 1
 
 class Button:
@@ -278,46 +286,58 @@ np2.addChild()
 np2.children[0].label = "a wug"
 num_new_children = 2
 
+print(root.makeText())
+
 def render():
     screen.fill((255,255,255))
     root.render()
     ui.render()
     pygame.display.flip()
    
+############################################
+#JS Globals 
+js.window.increaseChildPerClick = ui.increaseChildPerClick
+js.window.decreaseChildPerClick = ui.decreaseChildPerClick
+js.window.reset = root.reset
+js.window.export = root.export
+
 
 #############################################
 #Event Loop
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN:
-            if text_being_edited:
-                if event.key == pygame.K_BACKSPACE:
-                    text_buffer = text_buffer[:-1]
-                elif event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER or event.key == pygame.K_ESCAPE:
+async def main():
+    global mouse_x, mouse_y, left_click_down, text_buffer
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if text_being_edited:
+                    if event.key == pygame.K_BACKSPACE:
+                        text_buffer = text_buffer[:-1]
+                    elif event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER or event.key == pygame.K_ESCAPE:
+                        root.editText()
+                    else:
+                        text_buffer += event.unicode 
+                if event.key == pygame.K_q:
+                    root.treeAddChild()
+                if event.key == pygame.K_w:
+                    root.treeRemoveSelf()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    root.buttonInteract()
+                    root.grab()
                     root.editText()
-                else:
-                    text_buffer += event.unicode 
-            if event.key == pygame.K_q:
-                root.treeAddChild()
-            if event.key == pygame.K_w:
-                root.treeRemoveSelf()
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                root.buttonInteract()
-                ui.buttonInteract()
-                root.grab()
-                root.editText()
-        if event.type == pygame.QUIT:
-            running = False
+            if event.type == pygame.QUIT:
+                running = False
 
-    clock.tick(FPS)
+        clock.tick(FPS)
 
-    #mouse polling 
-    mouse_x, mouse_y = pygame.mouse.get_pos()
-    mouse_buttons = pygame.mouse.get_pressed()
-    left_click_down = mouse_buttons[0]
-    render()
+        #mouse polling 
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        mouse_buttons = pygame.mouse.get_pressed()
+        left_click_down = mouse_buttons[0]
+        render()
+        await asyncio.sleep(0)
+
 #############################################
 
-pygame.quit()
+asyncio.run(main())
