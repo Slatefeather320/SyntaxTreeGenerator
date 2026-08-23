@@ -50,8 +50,6 @@ class Tree:
                         self.grabbed = False
         elif self.shown:
             pygame.draw.circle(screen, (255,0,0), self.pos, self.handle_radius)
-            if left_click_down:
-                self.grabbed = True
 
         #render label text
         if self.text_edit_mode:
@@ -109,6 +107,13 @@ class Tree:
                 for child in self.children:
                     child.editText()
 
+    def grab(self):
+        if self.shown:
+            self.grabbed = True
+        else:
+            for child in self.children:
+                child.grab()
+
 #Creating Initial Tree
 root = Tree()
 root.pos = (WINDOW_WIDTH//2, 50)
@@ -137,6 +142,7 @@ while running:
                 root.removeSelf()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
+                root.grab()
                 root.editText()
         if event.type == pygame.QUIT:
             running = False
