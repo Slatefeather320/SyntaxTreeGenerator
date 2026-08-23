@@ -138,7 +138,7 @@ class Tree:
     def removeSelf(self):
         if self != root:
             self.parent.children.pop(self.index_from_parent)
-            self.parent.decrementSiblingIndecies()
+            self.parent.decrementSiblingIndecies(self.index_from_parent)
 
     def treeRemoveSelf(self):
         if self.shown:
@@ -147,9 +147,10 @@ class Tree:
             for child in self.children:
                 child.treeRemoveSelf()
 
-    def decrementSiblingIndecies(self):
+    def decrementSiblingIndecies(self, deli):
         for child in self.children:
-            child.index_from_parent -= 1
+            if child.index_from_parent > deli:
+                child.index_from_parent -= 1
 
     def editText(self):
         global text_being_edited, text_buffer
