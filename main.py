@@ -14,7 +14,7 @@ left_click_down = False
 
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Syntax Tree Generator")
-font = pygame.font.SysFont("Arial", 20)
+font = pygame.font.SysFont("Arial", 25)
 
 #############################################
 
@@ -28,13 +28,13 @@ class Tree:
     handle_radius = 10
     child_line_offset = 35
     line_width = 2
-    text_offset = 15
+    text_offset = 10
     interact_zone = 12**2 #needs to be squared to make distance calc easier 
-    child_spawn_dist = 70
+    child_spawn_dist = 90
 
     def __init__(self):
         self.pos = (0,0)
-        self.label = "Add Text"
+        self.label = "Edit Text"
         self.children = []
         self.shown = False
         self.grabbed = False
@@ -43,6 +43,22 @@ class Tree:
         self.text_highlighted = False
         self.text_edit_mode = False
         self.relation_to_moving_parent = (0,0)
+        self.buttons_shown = False
+        self.isRoot = False
+
+        self.button_vert_offset = 50
+        self.button_horz_offset = 12
+
+        self.add_button = Button()
+        self.add_button.color = (0,255,0)
+        self.add_button.label = "+"
+        self.add_button.pos = (self.pos[0] - self.button_horz_offset, self.pos[1] + self.button_vert_offset)
+
+        self.del_button = Button()
+        self.del_button.color = (255,0,0)
+        self.del_button.label = "x"
+        self.del_button.pos = (self.pos[0] + self.button_horz_offset, self.pos[1] + self.button_vert_offset)
+
 
     def moveChildRec(self):
         self.pos = (mouse_x + self.relation_to_moving_parent[0], mouse_y + self.relation_to_moving_parent[1])
@@ -82,33 +98,51 @@ class Tree:
             pygame.draw.line(screen, (0,0,0), (self.pos[0], self.pos[1] + self.child_line_offset), child.pos, width= self.line_width)
             child.render()
 
+        #render buttons 
+        midx = self.add_button.pos[0] + self.add_button.sidelength // 2 + self.button_horz_offset
+        midy = self.add_button.pos[1]
+        self.buttons_shown = abs(mouse_x - midx) <= 30 and abs(mouse_y - midy) <= 20
+        self.add_button.pos = (self.pos[0] - self.button_horz_offset, self.pos[1] + self.button_vert_offset)
+        self.del_button.pos = (self.pos[0] + self.button_horz_offset, self.pos[1] + self.button_vert_offset)
+        if self.buttons_shown:
+            self.add_button.render()
+            if not self.isRoot:
+                self.del_button.render()
+
     def addChild(self):
         global num_new_children
+        if num_new_children > 1:
+            angle_increment = (math.pi/2)/(num_new_children - 1)
+        else:
+            angle_increment = math.pi/4
+        for i in range(0,num_new_children):
+            angle = math.pi/4 + i*angle_increment
+            child = Tree()
+            child_x = self.pos[0] + self.child_spawn_dist * math.cos(angle)
+            child_y = self.pos[1] + self.child_spawn_dist * math.sin(angle)
+            child.pos = (child_x, child_y)
+            self.children.append(child)
+            child.parent = self
+            child.index_from_parent = len(self.children) - 1
+
+    def treeAddChild(self):
         if self.shown:
-            if num_new_children > 1:
-                angle_increment = (math.pi/2)/(num_new_children - 1)
-            else:
-                angle_increment = math.pi/4
-            for i in range(0,num_new_children):
-                angle = math.pi/4 + i*angle_increment
-                child = Tree()
-                child_x = self.pos[0] + self.child_spawn_dist * math.cos(angle)
-                child_y = self.pos[1] + self.child_spawn_dist * math.sin(angle)
-                child.pos = (child_x, child_y)
-                self.children.append(child)
-                child.parent = self
-                child.index_from_parent = len(self.children) - 1
+            self.addChild()
         else:
             for child in self.children:
-                child.addChild()
+                child.treeAddChild()
 
     def removeSelf(self):
-        if self.shown and self != root:
+        if self != root:
             self.parent.children.pop(self.index_from_parent)
             self.parent.decrementSiblingIndecies()
+
+    def treeRemoveSelf(self):
+        if self.shown:
+            self.removeSelf()
         else:
             for child in self.children:
-                child.removeSelf()
+                child.treeRemoveSelf()
 
     def decrementSiblingIndecies(self):
         for child in self.children:
@@ -149,21 +183,56 @@ class Tree:
             for child in self.children:
                 child.grab()
 
+    def buttonInteract(self):
+        print("Test")
+        if self.buttons_shown:
+            if self.add_button.checkClick():
+                self.addChild()
+            if self.del_button.checkClick():
+                self.removeSelf()
+        else:
+            for child in self.children:
+                child.buttonInteract()
+
 class UI:
     def __init__(self):
-        self.fontsize = 20
+        self.fontsize = 25
         self.font = pygame.font.SysFont("Arial", self.fontsize) 
 
     def render(self):    
         num_child_counter_text_surface = self.font.render(("Children Per Click: " + str(num_new_children)), True, (0,0,0))
         num_child_counter_text_rect =  num_child_counter_text_surface.get_rect() 
         num_child_counter_text_rect.bottomright = (WINDOW_WIDTH - self.fontsize/2, WINDOW_HEIGHT - self.fontsize/2)
-        screen.blit(num_child_counter_text_surface, num_child_counter_text_rect)        
+        screen.blit(num_child_counter_text_surface, num_child_counter_text_rect)   
+
+class Button:
+    font = pygame.font.SysFont("Arial", 20) 
+
+    def __init__(self):
+        self.pos = (0,0) #(centered)
+        self.label = "None"
+        self.color = (255,255,0)
+        self.sidelength = 20
+        self.label_color = (0,0,0)
+
+    def render(self):
+        pygame.draw.rect(screen, self.color, pygame.Rect(self.pos[0] - self.sidelength //2, self.pos[1] - self.sidelength //2, self.sidelength, self.sidelength))
+        label_surface = self.font.render(str(self.label), True, self.label_color)
+        label_rect =  label_surface.get_rect()
+        label_rect.centerx = self.pos[0]
+        label_rect.centery = self.pos[1] - 3
+        screen.blit(label_surface, label_rect) 
+
+    def checkClick(self):
+        hor = (mouse_x >= self.pos[0] - self.sidelength //2) and (mouse_x <= self.pos[0] + self.sidelength //2)
+        ver = (mouse_y >= self.pos[1] - self.sidelength //2) and (mouse_y <= self.pos[1] + self.sidelength //2)
+        return (hor and ver)
 
 
 #Creating Initial Tree
 root = Tree()
 root.pos = (WINDOW_WIDTH//2, 50)
+root.isRoot = True
 ui = UI()
 
 def render():
@@ -187,11 +256,12 @@ while running:
                 else:
                     text_buffer += event.unicode 
             if event.key == pygame.K_q:
-                root.addChild()
+                root.treeAddChild()
             if event.key == pygame.K_w:
-                root.removeSelf()
+                root.treeRemoveSelf()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
+                root.buttonInteract()
                 root.grab()
                 root.editText()
         if event.type == pygame.QUIT:
