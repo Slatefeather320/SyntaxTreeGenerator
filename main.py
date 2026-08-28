@@ -21,6 +21,7 @@ font = pygame.font.SysFont("Arial", 25)
 text_being_edited = False 
 text_buffer = ""
 num_new_children = 3
+grab_semaphor = True
 #############################################
 
 class Tree:
@@ -65,7 +66,7 @@ class Tree:
             child.moveChildRec()
 
     def render(self):
-        global text_buffer
+        global text_buffer, grab_semaphor
         #render and move using handle 
         self.shown = (mouse_x - self.pos[0])**2 + (mouse_y - self.pos[1])**2 <= self.interact_zone
         if self.grabbed:
@@ -74,6 +75,7 @@ class Tree:
                         child.moveChildRec()
                     if not left_click_down:
                         self.grabbed = False
+                        grab_semaphor = True
         elif self.shown:
             pygame.draw.circle(screen, (255,0,0), self.pos, self.handle_radius)
 
@@ -179,7 +181,9 @@ class Tree:
             child.setChildOffsetsRec(self)
 
     def grab(self):
-        if self.shown:
+        global grab_semaphor
+        if self.shown and grab_semaphor:
+            grab_semaphor = False
             self.grabbed = True
             self.setChildOffsets()
         else:
@@ -308,7 +312,7 @@ js.window.export = root.export
 #############################################
 #Event Loop
 async def main():
-    global mouse_x, mouse_y, left_click_down, text_buffer
+    global mouse_x, mouse_y, left_click_down, text_buffer, text_being_edited
     running = True
     while running:
         for event in pygame.event.get():
