@@ -112,6 +112,14 @@ class Tree:
 
     def addChild(self):
         global num_new_children
+
+        #This code overrides the old "select children per click" system no one liked using but the global to do that is still there
+        if num_new_children == 0:
+            if len(self.children) == 0:
+                num_new_children = 2
+            else:
+                num_new_children = 1
+
         spread_angle = math.pi / 2
         if num_new_children > 1:
             angle_increment = spread_angle / (num_new_children - 1)
@@ -128,6 +136,8 @@ class Tree:
             self.children.append(child)
             child.parent = self
             child.index_from_parent = len(self.children) - 1
+
+        num_new_children = 0
 
     def treeAddChild(self):
         if self.shown:
@@ -202,12 +212,11 @@ class Tree:
 
     def makeText(self):
         if self.parent != None:
-            hasSibling =  not self.parent.children == []
+            hasSibling =  not self.parent.children == [self]
         else:
             hasSibling = False
-        out =  self.label 
+        out =  self.label.replace(" ", "-") 
         if self.children != []: #is leaf
-            out = out.replace(" ", "-")
             out += " "
             self.children.reverse()
             for child in self.children:
@@ -237,10 +246,11 @@ class UI:
         self.font = pygame.font.SysFont("Arial", self.fontsize) 
 
     def render(self):    
-        num_child_counter_text_surface = self.font.render(("Children Per Click: " + str(num_new_children)), True, (0,0,0))
-        num_child_counter_text_rect =  num_child_counter_text_surface.get_rect() 
-        num_child_counter_text_rect.bottomright = (WINDOW_WIDTH - self.fontsize/2, WINDOW_HEIGHT - self.fontsize/2)
-        screen.blit(num_child_counter_text_surface, num_child_counter_text_rect) 
+        #num_child_counter_text_surface = self.font.render(("Children Per Click: " + str(num_new_children)), True, (0,0,0))
+        #num_child_counter_text_rect =  num_child_counter_text_surface.get_rect() 
+        #num_child_counter_text_rect.bottomright = (WINDOW_WIDTH - self.fontsize/2, WINDOW_HEIGHT - self.fontsize/2)
+        #screen.blit(num_child_counter_text_surface, num_child_counter_text_rect) 
+        pass
 
     def increaseChildPerClick(self, *args):
         global num_new_children
@@ -282,6 +292,7 @@ root.isRoot = True
 ui = UI()
 
 ##making the wug sentence :)
+num_new_children = 0
 root.label = "S"
 num_new_children = 2
 root.addChild()
@@ -295,8 +306,10 @@ np2.label = "NP"
 num_new_children = 1
 np.addChild()
 np.children[0].label = "This"
+num_new_children = 1
 v.addChild()
 v.children[0].label = "is"
+num_new_children = 1
 np2.addChild()
 np2.children[0].label = "a wug"
 num_new_children = 2

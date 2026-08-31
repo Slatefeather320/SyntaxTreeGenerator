@@ -356,14 +356,16 @@ function show_infobox() {
         <!-- TEXT SECTION SIDE-BY-SIDE -->
         <div class="text-section">
             <h2>UI based Syntax Tree Generator</h2>
-            <div class="btn-group">
-                <button class="app-btn" onclick="window.increaseChildPerClick()">
-                    + Increase Children per Click
-                </button>
-                <button class="app-btn" onclick="window.decreaseChildPerClick()">
-                    - Decrease Children per Click
-                </button>
-            </div>
+            <!--
+                <div class="btn-group">
+                    <button class="app-btn" onclick="window.increaseChildPerClick()">
+                        + Increase Children per Click
+                    </button>
+                    <button class="app-btn" onclick="window.decreaseChildPerClick()">
+                        - Decrease Children per Click
+                    </button>
+                </div>
+            -->
             <div class="btn-group">
                 <button class="app-btn" onclick="window.reset()">
                     Reset Tree
@@ -372,7 +374,27 @@ function show_infobox() {
                     Export Tree
                 </button>
             </div>
-            <div id="Output"></div>
+            <div class="output-container">
+                <div id="Output"></div>
+                <br>
+                <button class="copy-btn" onclick="copyOutputText(this)">Copy</button>
+            </div>
+
+            <script>
+                function copyOutputText(button) {
+                    const output = document.getElementById("Output");
+                    const text = output.innerText.trim() || "None";
+
+                    navigator.clipboard.writeText(text);
+
+                // visual
+                const originalText = button.innerText;
+                button.innerText = "Copied!";
+                setTimeout(() => {
+                    button.innerText = originalText;
+                }, 1000);
+            }
+            </script>
 
             <p>Output strings can be pasted into text based tree generators such as https://mshang.ca/syntree/</p>
             <p>Currently being user tested. Hover over nodes to interact. Use the red circles to drag nodes. Click '+' to add children at a node, click '-' to remove node.</p>
