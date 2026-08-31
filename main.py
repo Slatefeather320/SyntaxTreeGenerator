@@ -1,4 +1,4 @@
-import pygame, math, asyncio, js
+import pygame, math, asyncio, js, random
 ############################################
 #Pygame Boilerplate Stuf
 pygame.init()
@@ -110,8 +110,16 @@ class Tree:
             if not self.isRoot:
                 self.del_button.render()
 
+    def findPositions(self, l):
+        l.append(self.pos)
+        for child in self.children:
+            child.findPositions(l)
+        return l
+
     def addChild(self):
         global num_new_children
+
+        old_positions = self.findPositions([])
 
         #This code overrides the old "select children per click" system no one liked using but the global to do that is still there
         if num_new_children == 0:
@@ -132,6 +140,21 @@ class Tree:
             child = Tree()
             child_x = self.pos[0] + self.child_spawn_dist * math.cos(angle)
             child_y = self.pos[1] + self.child_spawn_dist * math.sin(angle)
+            #these are the positions it ideally wants but we need to check if it conflicts
+            
+            #code to add random offsets for conflicts
+            limit = 3
+            conflicts = True
+            i = 0
+            while i < limit and conflicts:
+                conflicts = False
+                i += 1
+                for old_position in old_positions:
+                    if (child_x - old_position[0])**2 + (child_y - old_position[1])**2 < 25:
+                        child_x += random.randint(-30,30)
+                        child_y += random.randint(-30,30)
+                        conflicts = True 
+
             child.pos = (child_x, child_y)
             self.children.append(child)
             child.parent = self
@@ -232,6 +255,7 @@ class Tree:
     def reset(self):
         self.label = "Text"
         self.children.clear()
+        self.pos = (WINDOW_WIDTH//2, 50)
 
     def export(self):
         text = self.makeText()
