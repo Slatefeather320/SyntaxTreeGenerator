@@ -22,7 +22,15 @@ text_being_edited = False
 text_buffer = ""
 num_new_children = 3
 grab_semaphor = True
+dscale = 1
+origin = (WINDOW_WIDTH//2, WINDOW_HEIGHT//2)
 #############################################
+
+def scalePoint(pos):
+    global dscale
+    dx = pos[0] - origin[0]
+    dy = pos[1] - origin[1]
+    return (origin[0] + dx*dscale, origin[1] + dy*dscale)
 
 class Tree:
     handle_radius = 10
@@ -66,7 +74,9 @@ class Tree:
             child.moveChildRec()
 
     def render(self):
-        global text_buffer, grab_semaphor
+        global text_buffer, grab_semaphor, dscale
+        if dscale != 1:
+            root.rescale()
         #render and move using handle 
         self.shown = (mouse_x - self.pos[0])**2 + (mouse_y - self.pos[1])**2 <= self.interact_zone
         if self.grabbed:
@@ -262,6 +272,12 @@ class Tree:
         output_el = js.document.getElementById("Output")
         if output_el:
             output_el.innerText = text
+
+    def rescale(self):
+        global dscale
+        self.pos = scalePoint(self.pos)
+        for child in self.children:
+            child.rescale()
         
 
 class UI:
@@ -357,9 +373,10 @@ js.window.export = root.export
 #############################################
 #Event Loop
 async def main():
-    global mouse_x, mouse_y, left_click_down, text_buffer, text_being_edited
+    global mouse_x, mouse_y, left_click_down, text_buffer, text_being_edited, dscale
     running = True
     while running:
+        dscale = 1
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if text_being_edited:
@@ -378,6 +395,8 @@ async def main():
                     root.buttonInteract()
                     root.grab()
                     root.editText()
+            if event.type == pygame.MOUSEWHEEL:
+                dscale = 1 + 0.015 * event.y
             if event.type == pygame.QUIT:
                 running = False
 
