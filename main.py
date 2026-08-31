@@ -119,7 +119,7 @@ class Tree:
     def addChild(self):
         global num_new_children
 
-        old_positions = self.findPositions([])
+        old_positions = root.findPositions([])
 
         #This code overrides the old "select children per click" system no one liked using but the global to do that is still there
         if num_new_children == 0:
