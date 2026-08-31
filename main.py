@@ -201,8 +201,13 @@ class Tree:
                 child.buttonInteract()
 
     def makeText(self):
+        if self.parent != None:
+            hasSibling =  not self.parent.children == []
+        else:
+            hasSibling = False
         out =  self.label 
-        if self.children != []:
+        if self.children != []: #is leaf
+            out = out.replace(" ", "-")
             out += " "
             self.children.reverse()
             for child in self.children:
@@ -210,7 +215,10 @@ class Tree:
             self.children.reverse()
             return "[" + out + "]"
         else:
-            return out
+            if hasSibling:
+                return "[" + out + "]"
+            else:
+                return out 
 
     def reset(self):
         self.label = "Text"
