@@ -251,10 +251,9 @@ class Tree:
         out =  self.label.replace(" ", "-") 
         if self.children != []: #is leaf
             out += " "
-            self.children.reverse()
+            self.children.sort(key=lambda x: x.pos[0])
             for child in self.children:
                 out += child.makeText()
-            self.children.reverse()
             return "[" + out + "]"
         else:
             if hasSibling:
