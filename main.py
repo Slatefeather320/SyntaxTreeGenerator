@@ -252,8 +252,11 @@ class Tree:
         if self.children != []: #is leaf
             out += " "
             self.children.sort(key=lambda x: x.pos[0])
+            i = 0
             for child in self.children:
+                child.index_from_parent = i
                 out += child.makeText()
+                i+= 1
             return "[" + out + "]"
         else:
             if hasSibling:
